@@ -17,4 +17,6 @@ public interface UserRepo extends JpaRepository<User, UUID> {
     boolean existsByEmailAndTenantId(String email, UUID tenantId);
 
     List<User> findAllByTenantId(UUID tenantId);
+
+
 }

@@ -1,12 +1,15 @@
 package com.example.MultiTenantSaas.service;
 
+import com.example.MultiTenantSaas.dto.AssignRoleRequest;
 import com.example.MultiTenantSaas.dto.CreateUserRequest;
 import com.example.MultiTenantSaas.dto.UpdateUserRequest;
 import com.example.MultiTenantSaas.dto.UserResponse;
+import com.example.MultiTenantSaas.entity.Role;
 import com.example.MultiTenantSaas.entity.Tenant;
 import com.example.MultiTenantSaas.entity.User;
 import com.example.MultiTenantSaas.exception.UserAlreadyExistsException;
 import com.example.MultiTenantSaas.exception.UserNotFoundException;
+import com.example.MultiTenantSaas.repo.RoleRepo;
 import com.example.MultiTenantSaas.repo.TenantRepo;
 import com.example.MultiTenantSaas.repo.UserRepo;
 import org.springframework.stereotype.Service;
@@ -19,11 +22,14 @@ public class UserService {
 
     private final UserRepo userRepo;
     private final TenantRepo tenantRepo;
+    private final RoleRepo roleRepo;
 
 
-    public UserService(UserRepo userRepo, TenantRepo tenantRepo) {
+
+    public UserService(UserRepo userRepo, TenantRepo tenantRepo, RoleRepo roleRepo) {
         this.userRepo = userRepo;
         this.tenantRepo = tenantRepo;
+        this.roleRepo = roleRepo;
     }
 
     //create user
@@ -100,6 +106,29 @@ public class UserService {
             userRepo.save(user);
     }
 
+    //assign role to user
+    public UserResponse assignRole(UUID userId, AssignRoleRequest request){
+        User user = userRepo.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
+        List<Role> roles=roleRepo.findAllById(request.roleId());
+
+        if (roles.size() != request.roleId().size()){
+            throw new RuntimeException("One or more role not found");
+        }
+
+        //check that all the roles belongs to the same tenant as user
+        for (Role role: roles){
+            if (!role.getTenant().getId().equals(user.getTenant().getId())){
+                throw new RuntimeException("User and Role must belong to the same tenant");
+            }
+        }
+
+        user.getRoles().addAll(roles);
+        User savedUser = userRepo.save(user);
+        return mapToResponse(savedUser);
+
+    }
+
 
     //Entity to DTO conversion
     private UserResponse mapToResponse(User user) {
@@ -109,7 +138,11 @@ public class UserService {
                 user.getEmail(),
                 user.isActive(),
                 user.getTenant().getId(),
-                user.getCreated_at()
+                user.getCreated_at(),
+                user.getRoles().
+                        stream()
+                        .map(Role::getId)
+                        .toList()
 
 
         );

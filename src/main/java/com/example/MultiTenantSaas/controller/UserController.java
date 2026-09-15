@@ -1,5 +1,6 @@
 package com.example.MultiTenantSaas.controller;
 
+import com.example.MultiTenantSaas.dto.AssignRoleRequest;
 import com.example.MultiTenantSaas.dto.CreateUserRequest;
 import com.example.MultiTenantSaas.dto.UpdateUserRequest;
 import com.example.MultiTenantSaas.dto.UserResponse;
@@ -25,7 +26,7 @@ public class UserController {
     //Create
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@PathVariable @Valid CreateUserRequest request) {
+    public UserResponse createUser(@RequestBody @Valid CreateUserRequest request) {
         return userService.createUser(request);
     }
 
@@ -42,7 +43,7 @@ public class UserController {
     }
 
     //get user by tenant
-    @GetMapping("/tenant/{tenant_id}")
+    @GetMapping("/tenant/{tenantId}")
     public List<UserResponse> getUserByTenant(@PathVariable UUID tenantId){
         return userService.getUserByTenant(tenantId);
     }
@@ -56,7 +57,12 @@ public class UserController {
     //deactivate
     @DeleteMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deactivateUser(UUID id){
+    public void deactivateUser(@PathVariable UUID id){
         userService.DeactivateUser(id);
+    }
+
+    @PutMapping("/{userId}/roles")
+    public UserResponse assignRoles(@PathVariable UUID userId, @RequestBody @Valid AssignRoleRequest request){
+        return userService.assignRole(userId, request);
     }
 }

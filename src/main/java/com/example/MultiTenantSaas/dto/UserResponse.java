@@ -1,6 +1,7 @@
 package com.example.MultiTenantSaas.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record UserResponse(
@@ -10,7 +11,8 @@ public record UserResponse(
         String email,
         boolean active,
         UUID tenantId,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        List<UUID> roleId
 
 ){
 
