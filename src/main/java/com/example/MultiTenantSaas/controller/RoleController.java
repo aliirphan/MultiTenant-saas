@@ -1,5 +1,6 @@
 package com.example.MultiTenantSaas.controller;
 
+import com.example.MultiTenantSaas.dto.AssignPermissionRequest;
 import com.example.MultiTenantSaas.dto.CreateRoleRequest;
 import com.example.MultiTenantSaas.dto.RoleResponse;
 import com.example.MultiTenantSaas.service.RoleService;
@@ -30,19 +31,28 @@ public class RoleController {
 
     //get role By id
     @GetMapping("/{id}")
-    public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id){
+    public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id) {
         return ResponseEntity.ok(roleService.getRoleById(id));
     }
 
     //get all role of tenant
     @GetMapping("/tenant/{tenantId}")
-    public ResponseEntity<List<RoleResponse>> getRolesByTenant(@PathVariable UUID tenantId){
+    public ResponseEntity<List<RoleResponse>> getRolesByTenant(@PathVariable UUID tenantId) {
         return ResponseEntity.ok(roleService.getRolesByTenant(tenantId));
+    }
+
+    //assignPermission
+    @PutMapping("/roleId/{permissions}")
+    public ResponseEntity<RoleResponse> assignPermission(@PathVariable UUID roleId,
+                                                         @RequestBody @Valid AssignPermissionRequest request) {
+
+        return ResponseEntity.ok(roleService.assignPermission(roleId, request));
+
     }
 
     //delete role
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRole(UUID id){
+    public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
         roleService.deleteRole(id);
         return ResponseEntity.noContent().build();
     }

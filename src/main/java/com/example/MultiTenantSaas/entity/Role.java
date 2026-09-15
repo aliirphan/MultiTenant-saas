@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +31,13 @@ public class Role {
     )
     private Tenant tenant;
 
+    @ManyToMany
+    @JoinTable(name = "role_permissions",
+    joinColumns = @JoinColumn(name = "role_id"),
+    inverseJoinColumns = @JoinColumn(name = "permission_id"))
+    @Builder.Default
+    private Set<Permission> permision= new HashSet<>();
+
     @Column(nullable = false,updatable = false)
     private LocalDateTime createdAt;
 
@@ -37,4 +46,6 @@ public class Role {
     public void onCreate(){
         createdAt=LocalDateTime.now();
     }
+
+
 }

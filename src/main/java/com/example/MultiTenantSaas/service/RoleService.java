@@ -1,11 +1,14 @@
 package com.example.MultiTenantSaas.service;
 
+import com.example.MultiTenantSaas.dto.AssignPermissionRequest;
 import com.example.MultiTenantSaas.dto.CreateRoleRequest;
 import com.example.MultiTenantSaas.dto.RoleResponse;
+import com.example.MultiTenantSaas.entity.Permission;
 import com.example.MultiTenantSaas.entity.Role;
 import com.example.MultiTenantSaas.entity.Tenant;
 import com.example.MultiTenantSaas.exception.RoleAlreadyExistsException;
 import com.example.MultiTenantSaas.exception.RoleNotFoundException;
+import com.example.MultiTenantSaas.repo.PermissionRepo;
 import com.example.MultiTenantSaas.repo.RoleRepo;
 import com.example.MultiTenantSaas.repo.TenantRepo;
 import org.springframework.stereotype.Service;
@@ -18,10 +21,12 @@ public class RoleService {
 
     private final RoleRepo roleRepo;
     private final TenantRepo tenantRepo;
+    private final PermissionRepo permissionRepo;
 
-    public RoleService(RoleRepo roleRepo, TenantRepo tenantRepo) {
+    public RoleService(RoleRepo roleRepo, TenantRepo tenantRepo, PermissionRepo permissionRepo) {
         this.roleRepo = roleRepo;
         this.tenantRepo = tenantRepo;
+        this.permissionRepo = permissionRepo;
     }
 
     //create role
@@ -40,7 +45,7 @@ public class RoleService {
 
         Role savedRole = roleRepo.save(role);
 
-        return mapToResponse(role);
+        return mapToResponse(savedRole);
     }
 
     //get role By id
@@ -59,6 +64,20 @@ public class RoleService {
                 .toList();
     }
 
+    //Assign Permission RoleResponse
+    public RoleResponse assignPermission(UUID roleId, AssignPermissionRequest request) {
+        Role role = roleRepo.findById(roleId).orElseThrow(() -> new RoleNotFoundException(roleId));
+
+        List<Permission> permissions = permissionRepo.findAllById(request.permissionIds());
+        if (permissions.size() != request.permissionIds().size())
+            throw new RuntimeException("One or more permissions not found");
+
+        role.getPermision().addAll(permissions);
+        Role savedRole = roleRepo.save(role);
+        return mapToResponse(savedRole);
+    }
+
+
     //delete Role
     public void deleteRole(UUID id) {
 
@@ -69,12 +88,16 @@ public class RoleService {
     }
 
     //Entity to Dto
-    public RoleResponse  mapToResponse(Role role) {
+    public RoleResponse mapToResponse(Role role) {
         return new RoleResponse(
                 role.getId(),
                 role.getName(),
                 role.getTenant().getId(),
-                role.getCreatedAt()
+                role.getCreatedAt(),
+                role.getPermision().
+                        stream()
+                        .map(Permission::getId)
+                        .toList()
         );
     }
 }

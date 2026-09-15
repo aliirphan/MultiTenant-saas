@@ -1,6 +1,7 @@
 package com.example.MultiTenantSaas.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record RoleResponse(
@@ -8,6 +9,7 @@ public record RoleResponse(
         UUID id,
         String name,
         UUID tenantId,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        List<UUID> permissionIds
 ) {
 }
