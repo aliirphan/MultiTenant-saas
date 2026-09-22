@@ -12,6 +12,7 @@ import com.example.MultiTenantSaas.exception.UserNotFoundException;
 import com.example.MultiTenantSaas.repo.RoleRepo;
 import com.example.MultiTenantSaas.repo.TenantRepo;
 import com.example.MultiTenantSaas.repo.UserRepo;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,13 +24,14 @@ public class UserService {
     private final UserRepo userRepo;
     private final TenantRepo tenantRepo;
     private final RoleRepo roleRepo;
+    private final PasswordEncoder passwordEncoder;
 
 
-
-    public UserService(UserRepo userRepo, TenantRepo tenantRepo, RoleRepo roleRepo) {
+    public UserService(UserRepo userRepo, TenantRepo tenantRepo, RoleRepo roleRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.tenantRepo = tenantRepo;
         this.roleRepo = roleRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     //create user
@@ -47,7 +49,7 @@ public class UserService {
         User user = User.builder()
                 .name(request.name())
                 .email(request.email())
-                .password(request.password())
+                .password(passwordEncoder.encode(request.password()))
                 .active(true)
                 .tenant(tenant)
                 .build();
@@ -102,23 +104,23 @@ public class UserService {
     public void DeactivateUser(UUID id) {
 
         User user = userRepo.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-            user.setActive(false);
-            userRepo.save(user);
+        user.setActive(false);
+        userRepo.save(user);
     }
 
     //assign role to user
-    public UserResponse assignRole(UUID userId, AssignRoleRequest request){
+    public UserResponse assignRole(UUID userId, AssignRoleRequest request) {
         User user = userRepo.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
-        List<Role> roles=roleRepo.findAllById(request.roleId());
+        List<Role> roles = roleRepo.findAllById(request.roleId());
 
-        if (roles.size() != request.roleId().size()){
+        if (roles.size() != request.roleId().size()) {
             throw new RuntimeException("One or more role not found");
         }
 
         //check that all the roles belongs to the same tenant as user
-        for (Role role: roles){
-            if (!role.getTenant().getId().equals(user.getTenant().getId())){
+        for (Role role : roles) {
+            if (!role.getTenant().getId().equals(user.getTenant().getId())) {
                 throw new RuntimeException("User and Role must belong to the same tenant");
             }
         }

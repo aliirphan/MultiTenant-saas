@@ -1,9 +1,7 @@
 package com.example.MultiTenantSaas.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -14,6 +12,8 @@ import java.util.UUID;
 @Builder
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Role {
 
     @Id
