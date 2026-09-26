@@ -2,6 +2,10 @@ package com.example.MultiTenantSaas.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.Parameter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -9,6 +13,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
+@Filter(name = "tenantFilter" , condition = "tenant_id = :tenantId")
 @Builder
 @Getter
 @Setter
