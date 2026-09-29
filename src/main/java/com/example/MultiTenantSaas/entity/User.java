@@ -5,7 +5,6 @@ import lombok.*;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.Parameter;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -15,7 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "users", uniqueConstraints = {@UniqueConstraint(name = "uk_user_tenant_email", columnNames = {"tenant_id", "email"})})
 @FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = UUID.class))
-@Filter(name = "tenantFilter" ,  condition = "tenant_id = :tenantId" )
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @Getter
 @Setter
 @AllArgsConstructor

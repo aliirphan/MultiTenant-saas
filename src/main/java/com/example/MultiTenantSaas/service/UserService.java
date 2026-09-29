@@ -12,8 +12,10 @@ import com.example.MultiTenantSaas.exception.UserNotFoundException;
 import com.example.MultiTenantSaas.repo.RoleRepo;
 import com.example.MultiTenantSaas.repo.TenantRepo;
 import com.example.MultiTenantSaas.repo.UserRepo;
+import com.example.MultiTenantSaas.security.TenantFilterService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,13 +23,15 @@ import java.util.UUID;
 @Service
 public class UserService {
 
+    private final TenantFilterService tenantFilterService;
     private final UserRepo userRepo;
     private final TenantRepo tenantRepo;
     private final RoleRepo roleRepo;
     private final PasswordEncoder passwordEncoder;
 
 
-    public UserService(UserRepo userRepo, TenantRepo tenantRepo, RoleRepo roleRepo, PasswordEncoder passwordEncoder) {
+    public UserService(TenantFilterService tenantFilterService, UserRepo userRepo, TenantRepo tenantRepo, RoleRepo roleRepo, PasswordEncoder passwordEncoder) {
+        this.tenantFilterService = tenantFilterService;
         this.userRepo = userRepo;
         this.tenantRepo = tenantRepo;
         this.roleRepo = roleRepo;
@@ -71,7 +75,11 @@ public class UserService {
     }
 
     //  getAllUser
+    @Transactional(readOnly=true)
     public List<UserResponse> getAllUser() {
+
+        tenantFilterService.enableTenantFilter();
+
         return userRepo.findAll()
                 .stream()
                 .map(this::mapToResponse)

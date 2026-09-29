@@ -3,6 +3,7 @@ package com.example.MultiTenantSaas.service;
 import com.example.MultiTenantSaas.dto.AssignPermissionRequest;
 import com.example.MultiTenantSaas.dto.CreateRoleRequest;
 import com.example.MultiTenantSaas.dto.RoleResponse;
+import com.example.MultiTenantSaas.dto.UpdateRoleRequest;
 import com.example.MultiTenantSaas.entity.Permission;
 import com.example.MultiTenantSaas.entity.Role;
 import com.example.MultiTenantSaas.entity.Tenant;
@@ -11,7 +12,9 @@ import com.example.MultiTenantSaas.exception.RoleNotFoundException;
 import com.example.MultiTenantSaas.repo.PermissionRepo;
 import com.example.MultiTenantSaas.repo.RoleRepo;
 import com.example.MultiTenantSaas.repo.TenantRepo;
+import com.example.MultiTenantSaas.security.TenantContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -64,6 +67,19 @@ public class RoleService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<RoleResponse> getAllRoles() {
+        UUID tenantId = TenantContext.getTenantId();
+
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID is mising TenantContext");
+        }
+        return roleRepo.findAllByTenantId(tenantId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     //Assign Permission RoleResponse
     public RoleResponse assignPermission(UUID roleId, AssignPermissionRequest request) {
         Role role = roleRepo.findById(roleId).orElseThrow(() -> new RoleNotFoundException(roleId));
@@ -87,17 +103,40 @@ public class RoleService {
         roleRepo.delete(role);
     }
 
+
+    //update Role
+    @Transactional
+    public RoleResponse updateRole(UUID id, UpdateRoleRequest request) {
+        UUID tenantId = TenantContext.getTenantId();
+
+        if (tenantId == null) {
+            throw new IllegalStateException("Tenant ID is missing TenantContext");
+        }
+
+        Role role = roleRepo.findByIdAndTenantId(id, tenantId).orElseThrow(() -> new RuntimeException("Role not found"));
+
+        role.setName(request.name());
+        Role savedRole = roleRepo.save(role);
+        return mapToResponse(savedRole);
+    }
+
     //Entity to Dto
     public RoleResponse mapToResponse(Role role) {
+
+        List<UUID> permissionIds = role.getPermision()
+                .stream()
+                .map(Permission::getId)
+                .toList();
+
         return new RoleResponse(
                 role.getId(),
                 role.getName(),
                 role.getTenant().getId(),
                 role.getCreatedAt(),
-                role.getPermision().
-                        stream()
-                        .map(Permission::getId)
-                        .toList()
+                permissionIds
+
         );
     }
+
+
 }

@@ -19,5 +19,7 @@ public interface UserRepo extends JpaRepository<User, UUID> {
 
     List<User> findAllByTenantId(UUID tenantId);
 
+    Optional<User> findByIdAndTenantId(UUID id, UUID tenantId);
+
 
 }

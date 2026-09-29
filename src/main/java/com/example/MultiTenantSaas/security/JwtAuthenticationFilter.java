@@ -6,12 +6,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,11 +22,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
-    private final TenantFilterService tenantFilterService;
-
-    public JwtAuthenticationFilter(JwtService jwtService, TenantFilterService tenantFilterService) {
+    public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
-        this.tenantFilterService = tenantFilterService;
     }
 
 
@@ -35,8 +34,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
+            return;
 
         }
 
@@ -49,11 +49,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String tenantId = claims.get("tenant_id", String.class);
 
-            TenantContext.setTenantId(UUID.fromString(tenantId));
-
-            tenantFilterService.enableTenantFilter();
-
+            @SuppressWarnings("unchecked")
             List<String> roles = claims.get("roles", List.class);
+
+            List<String> permissions = claims.get("permissions", List.class);
 
             //store tenant in TenantContext
             TenantContext.setTenantId(UUID.fromString(tenantId));
@@ -61,8 +60,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             //convert roles into spring security authorities
             List<SimpleGrantedAuthority> authorities = roles
                     .stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE" + role))
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                     .toList();
+
+            List<GrantedAuthority> authorities1= new ArrayList<>();
+
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                     userId,

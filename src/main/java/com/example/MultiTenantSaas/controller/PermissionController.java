@@ -6,6 +6,7 @@ import com.example.MultiTenantSaas.service.PermissionService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class PermissionController {
     }
 
     @PostMapping
+    @PreAuthorize("@customPermissionEvaluator.hasPermission('PERMISSION_CREATE')")
     public ResponseEntity<PermissionResponse> createPermission(@RequestBody @Valid PermissionRequest request) {
         PermissionResponse response = permissionService.createPermission(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -42,12 +44,14 @@ public class PermissionController {
     //get ALl
 
     @GetMapping
+    @PreAuthorize("@customPermissionEvaluator.hasPermission('PERMISSION_READ')")
     public ResponseEntity<List<PermissionResponse>> getAll() {
         return ResponseEntity.ok(permissionService.getAllPermissions());
     }
 
     //delete
     @DeleteMapping("/{id}")
+    @PreAuthorize("@customPermissionEvaluator.hasPermission('PERMISSION_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
 
         permissionService.deletePermission(id);

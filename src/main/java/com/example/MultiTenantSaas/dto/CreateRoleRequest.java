@@ -13,4 +13,6 @@ public record CreateRoleRequest(
         @NotNull(message = "Tenant Id is required")
         UUID tenantId
 ) {
+
 }
+

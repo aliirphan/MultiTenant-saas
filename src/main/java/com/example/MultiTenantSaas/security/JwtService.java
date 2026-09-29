@@ -1,5 +1,6 @@
 package com.example.MultiTenantSaas.security;
 
+import com.example.MultiTenantSaas.entity.Permission;
 import com.example.MultiTenantSaas.entity.Role;
 import com.example.MultiTenantSaas.entity.User;
 import io.jsonwebtoken.Claims;
@@ -38,10 +39,18 @@ public class JwtService {
                 .map(Role::getName)
                 .toList();
 
+        List<String> permissions = user.getRoles()
+                .stream()
+                .flatMap(role-> role.getPermision().stream())
+                .map(Permission::getName)
+                .distinct()
+                .toList();
+
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("tenant_id", user.getTenant().getId().toString())
                 .claim("roles", roles)
+                .claim("permissions", permissions)
                 .setIssuedAt(new Date())
                 .setExpiration(
                         new Date(System.currentTimeMillis() + expiration)
@@ -75,6 +84,10 @@ public class JwtService {
 
         return extractAllClaims(token)
                 .get("roles", List.class);
+    }
+
+    public List<String> extractPermissions(String token){
+        return extractAllClaims(token).get("permissions" , List.class);
     }
 }
 
